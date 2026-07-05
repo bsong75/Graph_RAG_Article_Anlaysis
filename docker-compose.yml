@@ -1,0 +1,54 @@
+services:
+  neo4j:
+    image: neo4j:5.26-community
+    container_name: graphrag-neo4j
+    ports:
+      - "7474:7474"   # browser UI
+      - "7687:7687"   # bolt
+    environment:
+      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-graphrag123}
+      - NEO4J_dbms_memory_heap_max__size=1G
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./backend
+    container_name: graphrag-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=${NEO4J_USER:-neo4j}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-graphrag123}
+      # Ollama runs in a separate container outside this compose file.
+      # host.docker.internal reaches the host, where that container publishes 11434.
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - GENERATION_MODEL=${GENERATION_MODEL:-gemma2:9b}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-nomic-embed-text}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./backend/app:/code/app   # hot reload in dev
+    depends_on:
+      neo4j:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: graphrag-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/code/src
+      - ./frontend/index.html:/code/index.html
+      - ./frontend/vite.config.js:/code/vite.config.js
+    depends_on:
+      - backend
+
+volumes:
+  neo4j_data:

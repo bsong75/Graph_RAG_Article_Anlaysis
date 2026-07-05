@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(docker compose config --quiet)",
+      "PowerShell(if \\($?\\) { \"compose config OK\" })",
+      "PowerShell(python --version)",
+      "PowerShell(docker compose build)",
+      "PowerShell(docker run --rm --entrypoint python i_graph_rag-backend -m compileall -q /code/app)",
+      "PowerShell(if \\($?\\) { \"python syntax OK\" })",
+      "PowerShell(docker start ollama; Start-Sleep -Seconds 3; \\(Invoke-RestMethod http://localhost:11434/api/tags\\).models | ForEach-Object { $_.name })",
+      "PowerShell(docker exec ollama ollama pull nomic-embed-text)",
+      "PowerShell(\\(Invoke-RestMethod http://localhost:11434/api/tags\\).models | ForEach-Object { $_.name }; docker compose up -d)",
+      "PowerShell(Invoke-RestMethod http://localhost:8000/api/health)",
+      "PowerShell(Invoke-RestMethod -Method Post http://localhost:8000/api/seed -TimeoutSec 300)",
+      "PowerShell($body = @{question='What research combines knowledge graphs with retrieval-augmented generation?'; mode='vector_graph'} | ConvertTo-Json; $r = Invoke-RestMethod -Method Post http://localhost:8000/api/ask -ContentType 'application/json' -Body $body -TimeoutSec 590; \"ANSWER:\"; $r.answer; \"\"; \"TOP SOURCES:\"; $r.sources | ForEach-Object { \"$\\($_.score\\)  $\\($_.title\\)\" })",
+      "PowerShell($body = @{question='How many papers did Elena Vasquez write, and which ones?'; mode='text2cypher'} | ConvertTo-Json; $r = Invoke-RestMethod -Method Post http://localhost:8000/api/ask -ContentType 'application/json' -Body $body -TimeoutSec 590; \"CYPHER:\"; $r.cypher; \"\"; \"ANSWER:\"; $r.answer)",
+      "PowerShell($fe = Invoke-WebRequest http://localhost:5173 -UseBasicParsing -TimeoutSec 30; \"frontend HTTP $\\($fe.StatusCode\\)\"; \\(Invoke-RestMethod http://localhost:8000/api/graph\\).nodes.Count; \\(Invoke-RestMethod http://localhost:8000/api/stats\\) | ConvertTo-Json -Depth 4)",
+      "Skill(dataviz)",
+      "Skill(dataviz:*)",
+      "PowerShell(node \"C:\\\\Users\\\\bsong\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\bundled-skills\\\\2.1.201\\\\06fe38a045254f7d4717ef2282caac5b\\\\dataviz\\\\scripts\\\\validate_palette.js\" \"#4f8ef7,#41c98e,#f2a444,#b07df7\" --mode dark --surface \"#171c26\")",
+      "PowerShell(docker run --rm -v \"C:\\\\Users\\\\bsong\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\bundled-skills\\\\2.1.201\\\\06fe38a045254f7d4717ef2282caac5b\\\\dataviz\\\\scripts:/skill\" node:20-alpine node /skill/validate_palette.js \"#4f8ef7,#41c98e,#f2a444,#b07df7\" --mode dark --surface \"#171c26\")",
+      "PowerShell(docker run --rm -v \"C:\\\\Users\\\\bsong\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\bundled-skills\\\\2.1.201\\\\06fe38a045254f7d4717ef2282caac5b\\\\dataviz\\\\scripts:/skill\" node:20-alpine node /skill/validate_palette.js \"#3987e5,#199e70,#c98500,#9085e9\" --mode dark --surface \"#171c26\")",
+      "PowerShell($r = Invoke-WebRequest \"http://localhost:5173/src/components/GraphView.jsx\" -UseBasicParsing -TimeoutSec 60; \"HTTP $\\($r.StatusCode\\), $\\($r.Content.Length\\) bytes transformed\"; docker logs graphrag-frontend --since 2m 2>$null | Select-Object -Last 5)",
+      "PowerShell(foreach \\($m in @\\('App.jsx','components/Chat.jsx','components/GraphView.jsx'\\)\\) { $r = Invoke-WebRequest \"http://localhost:5173/src/$m\" -UseBasicParsing -TimeoutSec 60; \"$m -> HTTP $\\($r.StatusCode\\)\" }; $g = Invoke-RestMethod http://localhost:8000/api/graph; $paper = $g.nodes | Where-Object { $_.label -eq 'Paper' } | Select-Object -First 1; \"sample paper node: $\\($paper | ConvertTo-Json -Compress\\)\")",
+      "PowerShell(foreach \\($m in @\\('App.jsx','components/GraphView.jsx'\\)\\) { $r = Invoke-WebRequest \"http://localhost:5173/src/$m\" -UseBasicParsing -TimeoutSec 60; \"$m -> HTTP $\\($r.StatusCode\\)\" }; $g = Invoke-RestMethod http://localhost:8000/api/graph; $paperId = \\($g.nodes | Where-Object { $_.pid -eq 'p04' }\\).id; $d = Invoke-RestMethod \"http://localhost:8000/api/node/$paperId\"; \"node details for p04: label=$\\($d.label\\), title=$\\($d.properties.title\\), connections=$\\($d.connections.Count\\)\")",
+      "PowerShell(foreach \\($m in @\\('App.jsx','components/GraphView.jsx'\\)\\) { $r = Invoke-WebRequest \"http://localhost:5173/src/$m\" -UseBasicParsing -TimeoutSec 60; \"$m -> HTTP $\\($r.StatusCode\\)\" })",
+      "PowerShell($r = Invoke-WebRequest \"http://localhost:5173/src/components/GraphView.jsx\" -UseBasicParsing -TimeoutSec 60; \"GraphView.jsx -> HTTP $\\($r.StatusCode\\)\")",
+      "PowerShell(foreach \\($m in @\\('constants.js','components/GraphCanvas.jsx','components/GraphView.jsx'\\)\\) { $r = Invoke-WebRequest \"http://localhost:5173/src/$m\" -UseBasicParsing -TimeoutSec 60; \"$m -> HTTP $\\($r.StatusCode\\)\" })"
+    ]
+  }
+}
