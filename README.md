@@ -59,28 +59,56 @@ networks:
 
 ## Architecture
 
-```
-frontend (React/Vite :5173)
-   │  /api proxy
-   ▼
-backend (FastAPI :8000)
-   │  bolt://           │  HTTP
-   ▼                    ▼
-neo4j :7687          Ollama :11434 (external container)
-  graph + vector       gemma2:9b (generation)
-  index                nomic-embed-text (embeddings)
+```mermaid
+flowchart LR
+    subgraph compose["docker-compose"]
+        FE["React / Vite frontend<br/>:5173"]
+        BE["FastAPI backend<br/>:8000"]
+        NEO[("Neo4j :7687<br/>graph + vector index")]
+    end
+    OLL["Ollama :11434<br/>(external container)<br/>gemma2:9b · nomic-embed-text"]
+
+    FE -- "/api proxy" --> BE
+    BE -- "bolt://" --> NEO
+    BE -- "HTTP" --> OLL
 ```
 
 ### Graph schema
 
-```
-(:Author {name})-[:AUTHORED]->(:Paper {id, title, abstract, year, embedding})
-(:Author)-[:AFFILIATED_WITH]->(:Institution {name})
-(:Paper)-[:HAS_TOPIC]->(:Topic {name})
-(:Paper)-[:CITES]->(:Paper)
+```mermaid
+graph LR
+    Author(["Author {name}"]) -- AUTHORED --> Paper["Paper {id, title, abstract,<br/>year, embedding}"]
+    Author -- AFFILIATED_WITH --> Institution(["Institution {name}"])
+    Paper -- HAS_TOPIC --> Topic(["Topic {name}"])
+    Paper -- CITES --> Paper
 ```
 
 The vector index `paper_embeddings` (cosine, dimensions auto-detected from the embedding model) lives on `Paper.embedding`.
+
+### Ask flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant FE as Frontend
+    participant BE as FastAPI
+    participant O as Ollama
+    participant N as Neo4j
+
+    U->>FE: question + mode
+    FE->>BE: POST /api/ask
+    alt vector + graph expansion
+        BE->>O: embed question (nomic-embed-text)
+        BE->>N: vector index top-k + expand<br/>authors / topics / citations
+        BE->>O: answer from graph context (gemma2:9b)
+    else text-to-Cypher
+        BE->>O: question → Cypher (gemma2:9b)
+        BE->>N: run read-only Cypher<br/>(one repair retry on error)
+        BE->>O: phrase results as answer
+    end
+    BE-->>FE: answer + sources / cypher
+    FE-->>U: answer, retrieved papers highlighted in graph
+```
 
 ### API
 
