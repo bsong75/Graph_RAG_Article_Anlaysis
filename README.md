@@ -2,7 +2,7 @@
 
 A Graph RAG demo application: **Neo4j** (graph + vector index) · **FastAPI** middleware · **React/Vite** frontend · **Ollama** for fully-local LLM inference.
 
-![Graph RAG — chat panel and interactive knowledge graph](docs/screenshot.png)
+![Graph RAG — chat panel and interactive knowledge graph](docs/screenshot2.png)
 
 It ships with a fictional dataset of 16 interlinked research papers (authors, institutions, topics, citations) and supports three retrieval modes:
 
